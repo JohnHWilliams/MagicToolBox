@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace BreadBoards.Core.Web.Pages {
     public class AboutModel : PageModel {
-        public string Message { get; set; }
+        public string Message { set; get; }
 
         public void OnGet() {
             this.Message = "Your application description page.";

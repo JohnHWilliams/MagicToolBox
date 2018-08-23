@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace BreadBoards.Core.Web.Pages {
     public class ErrorModel : PageModel {
-        public string RequestId { get; set; }
+        public string RequestId { set; get; }
 
         public bool ShowRequestId => !string.IsNullOrEmpty(this.RequestId);
 
