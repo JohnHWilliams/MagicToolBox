@@ -11,7 +11,17 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BreadBoards.WPF.Tray", "Bre
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BreadBoards.Win.Blob", "BreadBoards.Win.Blob\BreadBoards.Win.Blob.csproj", "{F6AACC7D-6543-488F-ABD8-9E192EF721C1}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MagicToolBox.Core", "MagicToolBox.Core\MagicToolBox.Core.csproj", "{421665F6-7E0E-4451-84A5-890996E6752C}"
+EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "MagicToolBox.Shared", "MagicToolBox.Shared\MagicToolBox.Shared.shproj", "{775DE9F5-FD79-4795-8170-A3E4A12077C7}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "BreadBoards", "BreadBoards", "{D7CACEFD-4DFF-444D-8DC3-DDB480420454}"
+EndProject
 Global
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		MagicToolBox.Shared\MagicToolBox.Shared.projitems*{775de9f5-fd79-4795-8170-a3e4a12077c7}*SharedItemsImports = 13
+		MagicToolBox.Shared\MagicToolBox.Shared.projitems*{f6aacc7d-6543-488f-abd8-9e192ef721c1}*SharedItemsImports = 4
+	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
@@ -33,9 +43,19 @@ Global
 		{F6AACC7D-6543-488F-ABD8-9E192EF721C1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F6AACC7D-6543-488F-ABD8-9E192EF721C1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F6AACC7D-6543-488F-ABD8-9E192EF721C1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{421665F6-7E0E-4451-84A5-890996E6752C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{421665F6-7E0E-4451-84A5-890996E6752C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{421665F6-7E0E-4451-84A5-890996E6752C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{421665F6-7E0E-4451-84A5-890996E6752C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{5BE8B416-61FF-4BEB-96E9-A8536D437EFA} = {D7CACEFD-4DFF-444D-8DC3-DDB480420454}
+		{E60E0E2F-389B-466D-B325-DD21B18BAE50} = {D7CACEFD-4DFF-444D-8DC3-DDB480420454}
+		{B1C61AD1-6C37-4D03-9783-588AD10BEFC5} = {D7CACEFD-4DFF-444D-8DC3-DDB480420454}
+		{F6AACC7D-6543-488F-ABD8-9E192EF721C1} = {D7CACEFD-4DFF-444D-8DC3-DDB480420454}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {B1A1E28D-3411-457E-8B1B-D41DBE4F0897}

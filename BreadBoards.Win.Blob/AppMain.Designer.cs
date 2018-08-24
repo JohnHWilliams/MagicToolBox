@@ -36,6 +36,8 @@
             this.lblProgress = new System.Windows.Forms.ToolStripStatusLabel();
             this.ctMainSplitView = new System.Windows.Forms.SplitContainer();
             this.dbsPictureData = new System.Windows.Forms.BindingSource(this.components);
+            this.lblDetails = new System.Windows.Forms.Label();
+            this.ttDetail = new System.Windows.Forms.ToolTip(this.components);
             ((System.ComponentModel.ISupportInitialize)(this.pbxImageDisplay)).BeginInit();
             this.pnlActionControls.SuspendLayout();
             this.stsBottom.SuspendLayout();
@@ -54,20 +56,21 @@
             this.pbxImageDisplay.Dock = System.Windows.Forms.DockStyle.Fill;
             this.pbxImageDisplay.Location = new System.Drawing.Point(0, 0);
             this.pbxImageDisplay.Name = "pbxImageDisplay";
-            this.pbxImageDisplay.Size = new System.Drawing.Size(1244, 654);
+            this.pbxImageDisplay.Size = new System.Drawing.Size(1244, 656);
             this.pbxImageDisplay.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.pbxImageDisplay.TabIndex = 2;
             this.pbxImageDisplay.TabStop = false;
             // 
             // pnlActionControls
             // 
+            this.pnlActionControls.Controls.Add(this.lblDetails);
             this.pnlActionControls.Controls.Add(this.cmdPickFolder);
             this.pnlActionControls.Controls.Add(this.tbSelectedPath);
             this.pnlActionControls.Controls.Add(this.cmdGetImageFromDB);
             this.pnlActionControls.Dock = System.Windows.Forms.DockStyle.Fill;
             this.pnlActionControls.Location = new System.Drawing.Point(0, 0);
             this.pnlActionControls.Name = "pnlActionControls";
-            this.pnlActionControls.Size = new System.Drawing.Size(1244, 63);
+            this.pnlActionControls.Size = new System.Drawing.Size(1244, 61);
             this.pnlActionControls.TabIndex = 5;
             // 
             // cmdPickFolder
@@ -151,12 +154,21 @@
             this.ctMainSplitView.Panel2.AutoScroll = true;
             this.ctMainSplitView.Panel2.Controls.Add(this.pbxImageDisplay);
             this.ctMainSplitView.Size = new System.Drawing.Size(1244, 721);
-            this.ctMainSplitView.SplitterDistance = 63;
+            this.ctMainSplitView.SplitterDistance = 61;
             this.ctMainSplitView.TabIndex = 7;
             // 
             // dbsPictureData
             // 
             this.dbsPictureData.AllowNew = false;
+            // 
+            // lblDetails
+            // 
+            this.lblDetails.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
+            this.lblDetails.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblDetails.Location = new System.Drawing.Point(118, 34);
+            this.lblDetails.Name = "lblDetails";
+            this.lblDetails.Size = new System.Drawing.Size(1100, 22);
+            this.lblDetails.TabIndex = 4;
             // 
             // AppMain
             // 
@@ -198,6 +210,8 @@
         private System.Windows.Forms.ToolStripProgressBar pgProgress;
         private System.Windows.Forms.SplitContainer ctMainSplitView;
         private System.Windows.Forms.BindingSource dbsPictureData;
+        private System.Windows.Forms.Label lblDetails;
+        private System.Windows.Forms.ToolTip ttDetail;
     }
 }
 
