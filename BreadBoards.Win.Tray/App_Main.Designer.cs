@@ -1,4 +1,4 @@
-﻿namespace BreadBoards.Win.Tray {
+﻿namespace MagicToolBox.LunchTray {
     partial class App_Main {
         /// <summary>
         /// Required designer variable.
@@ -28,6 +28,7 @@
             this.txtConsoleLog = new System.Windows.Forms.TextBox();
             this.TrayIcon = new System.Windows.Forms.NotifyIcon(this.components);
             this.tmrBreaks = new System.Windows.Forms.Timer(this.components);
+            this.ttNotify = new System.Windows.Forms.ToolTip(this.components);
             this.SuspendLayout();
             // 
             // txtConsoleLog
@@ -54,6 +55,13 @@
             // 
             this.tmrBreaks.Interval = 1000;
             // 
+            // ttNotify
+            // 
+            this.ttNotify.AutoPopDelay = 10000;
+            this.ttNotify.InitialDelay = 500;
+            this.ttNotify.IsBalloon = true;
+            this.ttNotify.ReshowDelay = 100;
+            // 
             // App_Main
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -62,7 +70,7 @@
             this.ClientSize = new System.Drawing.Size(784, 561);
             this.Controls.Add(this.txtConsoleLog);
             this.Name = "App_Main";
-            this.Text = "BreadBoards.Win.Tray";
+            this.Text = "MagicToolBox.LunchTray";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.App_Main_FormClosing);
             this.Load += new System.EventHandler(this.App_Main_Load);
             this.ResumeLayout(false);
@@ -75,6 +83,7 @@
         private System.Windows.Forms.TextBox txtConsoleLog;
         private System.Windows.Forms.NotifyIcon TrayIcon;
         private System.Windows.Forms.Timer tmrBreaks;
+        private System.Windows.Forms.ToolTip ttNotify;
     }
 }
 

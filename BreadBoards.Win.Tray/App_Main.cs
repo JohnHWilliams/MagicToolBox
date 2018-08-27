@@ -4,7 +4,7 @@ using System.Diagnostics;
 using Microsoft.Win32;
 using cfg = System.Configuration.ConfigurationManager;
 
-namespace BreadBoards.Win.Tray {
+namespace MagicToolBox.LunchTray {
     public partial class App_Main : Form {
 
         #region " Types "
@@ -82,12 +82,13 @@ namespace BreadBoards.Win.Tray {
                         var tsAway = (this.SysUnLock.Value - this.SysLocked.Value);
                         Trace.WriteLine($"{this.SysUnLock.Value.ToString("yyyy-MM-dd HH:mm:ss")} {e.Reason.ToString()}", "SessionSwitch");
                         Trace.WriteLineIf(this.SysLocked.HasValue, $"Time Away: {tsAway.ToString(@"hh\:mm\:ss")}");
-                        this.TrayIcon.Visible = true;
-                        this.TrayIcon.ShowBalloonTip(25000, "Welcome Back!!", $"Time Away: {tsAway.ToString(@"hh\:mm\:ss")}", ToolTipIcon.Info);
                         this.Visible = true;
                         this.Show();
                         this.Activate();
                         MessageBox.Show($"Welcome Back!\r\nYour total time away: {tsAway.ToString(@"hh\:mm\:ss")}", "Welcome Back!");
+                        this.TrayIcon.Visible = true;
+                        this.TrayIcon.ShowBalloonTip(25000, "Welcome Back!!", $"Time Away: {tsAway.ToString(@"hh\:mm\:ss")}", ToolTipIcon.Info);
+                        Application.DoEvents();
                         // Stop the timer
                         this.tmrBreaks.Stop();                    
                         break;

@@ -1,16 +1,18 @@
 ﻿using System;
 using System.IO;
 using System.Net;
+using System.Text;
 using System.Data;
 using System.Data.SqlClient;
 using System.Data.SqlTypes;
 using System.Drawing;
 using System.Drawing.Imaging;
-using System.Windows.Forms;
 using System.Diagnostics;
 using System.Linq;
 using System.Net.Sockets;
+using System.Windows.Forms;
 using System.Threading.Tasks;
+// Custom Renamed Prefixed Usings
 using Magic=MagicToolBox.Shared.Win;
 using cfg = System.Configuration.ConfigurationManager;
 
@@ -18,9 +20,6 @@ namespace BreadBoards.Win.Blob {
     public partial class AppMain : Form {
 
         #region " Types "
-            private enum WorkRoutine {
-                LoadPictures
-            }
             private enum SqlErrors {
                 UniqueConstraintViolation = 2627
             }
@@ -37,8 +36,7 @@ namespace BreadBoards.Win.Blob {
                 }
             }
             private int Counter { set; get; } = 1;
-            // Progress Indicators
-            private int ProgressMax { set; get; }
+            // Progress Indicators            
             private int ProgressValue { set; get; }
             private string ProgressText { set; get; }
             private Image ProgressImage { set; get; }
@@ -67,40 +65,50 @@ namespace BreadBoards.Win.Blob {
             /// </summary>
             /// <param name="sender"></param>
             /// <param name="e"></param>
-            private void cmdPickFolder_Click(object sender, EventArgs e) {                
-                // Show Folder Picker Dialog 
-                switch (this.fbPickFolder.ShowDialog()) {
-                    case DialogResult.OK:
-                        // Set the TextBox.Text to the selected folder
-                        this.tbSelectedPath.Text = this.fbPickFolder.SelectedPath;
-                        var SearchPattern = Magic.Prompt.ShowDialog("Search Pattern", "Enter a value", "*.tif*");
-                        // Set ProgresStart Time
-                        this.ProgressStart = DateTime.Now;
-                        // Run the method via Task and run the picture loads in the background
-                        using (var t = Task.Factory.StartNew(() => this.UploadPictures(Directory.GetFiles(this.tbSelectedPath.Text, SearchPattern, SearchOption.TopDirectoryOnly)))) {
-                            while (!t.IsCompleted) {
-                                // Update Progress Information
-                                this.pgProgress.Value = this.ProgressValue;
-                                this.lblProgress.Text = $"Loading File: {this.ProgressText}";
-                                this.lblDetails.Text = this.ProgressText;
-                                // Show the picture being loaded
-                                this.pbxImageDisplay.Image = this.ProgressImage;
-                                //// Keep Things Moving Otherwise The Progress Bar Doesn't Update Properly
-                                //Application.DoEvents();
-                            }
-                        }
-                        // Set the progress complete time
-                        this.ProgressEnd = DateTime.Now;
-                        // Indicate Completion w/ Stats
-                        MessageBox.Show($"{this.ProgressMax.ToString("#,##0")} files were loaded from {this.tbSelectedPath.Text} in {(this.ProgressEnd - this.ProgressStart).ToString(@"hh\:mm\:ss")}");
-                        // Reset progress indicators
-                        this.pgProgress.Value = 0;
-                        this.lblProgress.Text = "";
-                        this.pbxImageDisplay.Image = null;
-                        break;
-                    default:
-                        break;
+            private void cmdPickFolder_Click(object sender, EventArgs e) {
+                // Show Folder Picker Dialog, If Result wasn't OK then just jump out
+                if (this.fbPickFolder.ShowDialog() != DialogResult.OK) return;
+
+                // Set the TextBox.Text to the selected folder
+                this.tbSelectedPath.Text = this.fbPickFolder.SelectedPath;
+                var SearchPattern = Magic.Prompt.ShowDialog("Search Pattern", "Enter a value", "*.png");
+
+                // Set ProgresStart Time
+                var Files = Directory.GetFiles(this.tbSelectedPath.Text, SearchPattern, SearchOption.TopDirectoryOnly);
+
+                // Initialize Progress
+                this.pgProgress.Maximum = Files.Length;
+                this.ProgressValue = 0;
+                this.ProgressStart = DateTime.Now;
+
+                // Run the method via Task and run the picture loads in the background
+                using (var t = Task.Factory.StartNew(() => this.UploadPictures(Files))) {
+                    // Loop wile the task runs
+                    while (!t.IsCompleted) {
+                        // Update Progress Information
+                        this.pgProgress.Value = this.ProgressValue;
+                        this.lblProgress.Text = $"Loading File: {this.ProgressText}";
+                        this.lblDetails.Text = this.ProgressText;
+
+                        // Show the picture being loaded
+                        this.pbxImageDisplay.Image = this.ProgressImage;
+
+                        // Keep Things Moving Otherwise The Progress Bar Doesn't Update Properly
+                        Application.DoEvents();
+                    }
                 }
+
+                // Set the progress complete time
+                this.ProgressEnd = DateTime.Now;
+
+                // Indicate Completion w/ Stats
+                MessageBox.Show($"{Files.Length.ToString("#,##0")} files were loaded from {this.tbSelectedPath.Text} in {(this.ProgressEnd - this.ProgressStart).ToString(@"hh\:mm\:ss")}");                        
+                        
+                // Reset progress indicators
+                this.pgProgress.Value = 0;
+                this.lblProgress.Text = "";
+                this.pbxImageDisplay.Image = null;
+
                 // Force garbage collection to release memory resources
                 GC.Collect();
             }
@@ -116,19 +124,20 @@ namespace BreadBoards.Win.Blob {
         #endregion
 
         #region " Methods "
+            /// <summary>
+            /// After the user selects a folder and enters a search pattern this method is called by way of Threading.Tasks.Task.Run().
+            /// The task runs while the control of the form is returned to the user then progress information is updated and shown at the bottom.
+            /// </summary>
+            /// <param name="FilesFound">The array of full path and file name string values of the files meeting the search pattern value within the selected folder.</param>
             private void UploadPictures(string[] FilesFound) {
-                // Update Progress Bar Maximum
-                this.ProgressMax = FilesFound.Length;
-                // Reset the progress to 0%
-                this.ProgressValue = 0;
                 // Loop through all the picture files
-                foreach (var FileName in FilesFound) {
+                foreach (var FilePath in FilesFound) {
                     // Get the File Info
-                    var imgInfo = new FileInfo(FileName);
-                    // Setup a place to put the data
-                    byte[] blob;
+                    var imgInfo = new FileInfo(FilePath);
+
                     // Update Progress
                     this.ProgressText = imgInfo.Name;
+
                     // Open the file and get a stream going
                     using (var fsSource = new FileStream(imgInfo.FullName, FileMode.Open, FileAccess.Read)) {
                         // Instanciate Image Object
@@ -139,17 +148,20 @@ namespace BreadBoards.Win.Blob {
                                 using (var ms = new MemoryStream()) {
                                     // Select the page per this iteration
                                     img.SelectActiveFrame(FrameDimension.Page, i);
+
                                     // Save to the memory as PNG
                                     img.Save(ms, ImageFormat.Png);
-                                    blob = ms.ToArray();
+
                                     // Put it in the database!
-                                    this.AddPictureData(imgInfo, img, blob, i, ImageFormat.Png.ToString().ToUpper());
+                                    this.AddPictureData(imgInfo, img, ms.ToArray(), i, ImageFormat.Png.ToString().ToUpper());
+
                                     // Set so the image will show in the PictureBox control
                                     this.ProgressImage = Image.FromStream(ms);  // Can't use img because it will bitch about the image being in use 
                                 }
                             }
                         }
-                    }                        
+                    }
+
                     // Update Progress Completion
                     this.ProgressValue++;
                     this.ProgressText = "Files Loaded";
@@ -204,35 +216,49 @@ namespace BreadBoards.Win.Blob {
                         try {
                             // Create The SqlCommand
                             using (var CMD = new SqlCommand($"blob.PictureData_Select", DB, txGetFile)) {
+
+                                // Identify that it's a procedure otherwise you'll get a syntax error bitching aboutt not having "Exec " in front which is just, well.. INELEGANT!!
                                 CMD.CommandType = CommandType.StoredProcedure;
+
+                                // Use the individual RowID to pull just one record from the proc 
                                 CMD.Parameters.AddWithValue("@RowID", this.Counter);
+
+                                // Execute the command then read the results 
                                 using (var DR = CMD.ExecuteReader()) {
                                     while (DR.Read()) {
                                         // Pull the file via SqlFileStream
                                         using (var sfs = new SqlFileStream(DR["PathName"].ToString(), (byte[])DR["FileContext"], FileAccess.Read)) {
-                                            this.ttDetail.IsBalloon = true;
-                                            this.ttDetail.ToolTipTitle = "DB Image Details";
                                             // Display The Image On The Form
                                             this.pbxImageDisplay.Invalidate(true);
                                             this.pbxImageDisplay.Image = Image.FromStream(sfs);
-                                            // Now show details on the form                                            
+
+                                            // Now show details on the form
                                             this.lblDetails.Invalidate(true);
-                                            this.lblDetails.Text = $"{DR["FileName"].ToString().Split(new char[] { '.' })[0]}.{(int)DR["FilePageIndex"] + 1:00}-{DR["FilePageCount"]:00}.{DR["FileBlobType"]}";
-                                            var sb = new System.Text.StringBuilder();
+                                            this.lblDetails.Text = $"{DR["FileName"].ToString().Split(new char[] { '.' })[0]}.{(int)DR["FilePageNumber"]:#00}-{DR["FilePageCount"]:#00}.{DR["FileBlobType"].ToString().ToUpper()}";
+
+                                            // Setup the stringbuilder and populate with all the field name: value key pair values
+                                            var sb = new StringBuilder();
                                             for (var i = 0; i < DR.FieldCount; i++) {
                                                 sb.Append($"{DR.GetName(i)}: {DR[i]}\r\n");
                                             }
+
+                                            // Setup the tooltip 
+                                            this.ttDetail.IsBalloon = true;
+                                            this.ttDetail.ToolTipTitle = "DB Image Details";
                                             this.ttDetail.SetToolTip(this.lblDetails, sb.ToString());
                                             this.ttDetail.SetToolTip(this.pbxImageDisplay, sb.ToString());
                                         }
                                     }
                                 }
                             }
+
                             // Commit the transaction
                             txGetFile.Commit();
                         }
                         catch (Exception x) {
+                            // RollBack The Transaction
                             txGetFile.Rollback("GetPictureFileStream");
+                            // Trace the exception
                             Trace.WriteLine(x.ToString());
                         }
                     }
@@ -243,5 +269,6 @@ namespace BreadBoards.Win.Blob {
                 this.Counter++;
             }
         #endregion
+
     }
 }
