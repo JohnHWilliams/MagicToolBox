@@ -27,8 +27,9 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(App_Main));
             this.txtConsoleLog = new System.Windows.Forms.TextBox();
             this.TrayIcon = new System.Windows.Forms.NotifyIcon(this.components);
-            this.tmrBreaks = new System.Windows.Forms.Timer(this.components);
+            this.tmrBreak = new System.Windows.Forms.Timer(this.components);
             this.ttNotify = new System.Windows.Forms.ToolTip(this.components);
+            this.tmrWork = new System.Windows.Forms.Timer(this.components);
             this.SuspendLayout();
             // 
             // txtConsoleLog
@@ -51,9 +52,10 @@
             this.TrayIcon.Visible = true;
             this.TrayIcon.DoubleClick += new System.EventHandler(this.TrayIcon_DoubleClick);
             // 
-            // tmrBreaks
+            // tmrBreak
             // 
-            this.tmrBreaks.Interval = 1000;
+            this.tmrBreak.Interval = 1000;
+            this.tmrBreak.Tick += new System.EventHandler(this.tmrBreak_Tick);
             // 
             // ttNotify
             // 
@@ -61,6 +63,10 @@
             this.ttNotify.InitialDelay = 500;
             this.ttNotify.IsBalloon = true;
             this.ttNotify.ReshowDelay = 100;
+            // 
+            // tmrWork
+            // 
+            this.tmrWork.Tick += new System.EventHandler(this.tmrWork_Tick);
             // 
             // App_Main
             // 
@@ -82,8 +88,9 @@
 
         private System.Windows.Forms.TextBox txtConsoleLog;
         private System.Windows.Forms.NotifyIcon TrayIcon;
-        private System.Windows.Forms.Timer tmrBreaks;
+        private System.Windows.Forms.Timer tmrBreak;
         private System.Windows.Forms.ToolTip ttNotify;
+        private System.Windows.Forms.Timer tmrWork;
     }
 }
 

@@ -24,6 +24,7 @@ EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		MagicToolBox.Shared\MagicToolBox.Shared.projitems*{775de9f5-fd79-4795-8170-a3e4a12077c7}*SharedItemsImports = 13
+		MagicToolBox.Shared\MagicToolBox.Shared.projitems*{e60e0e2f-389b-466d-b325-dd21b18bae50}*SharedItemsImports = 4
 		MagicToolBox.Shared\MagicToolBox.Shared.projitems*{f6aacc7d-6543-488f-abd8-9e192ef721c1}*SharedItemsImports = 4
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

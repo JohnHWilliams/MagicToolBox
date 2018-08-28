@@ -2,9 +2,34 @@
 using System.Text;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Diagnostics;
 using System.Windows.Forms;
 
 namespace MagicToolBox.Shared.Win {
+    public class TextBoxTraceListener : TraceListener {
+        private TextBox _target;
+        private NotifyIcon _notify;
+        private StringSendDelegate _invokeWrite;
+        public TextBoxTraceListener(TextBox target, NotifyIcon notify) {
+            this._target = target;
+            this._notify = notify;
+            this._invokeWrite = new StringSendDelegate(this.SendString);
+        }
+        public override void Write(string message) {
+            this._target.Invoke(this._invokeWrite, new object[] { message });
+        }
+        public override void WriteLine(string message) {
+            this._target.Invoke(this._invokeWrite, new object[] { message + Environment.NewLine });
+        }
+        private delegate void StringSendDelegate(string message);
+        private void SendString(string message) {
+            // No need to lock text box as this function will only 
+            // ever be executed from the UI thread
+            this._target.Text += message;
+            this._notify.BalloonTipText = message;
+            this._notify.ShowBalloonTip(5000);
+        }
+    }
     public static class Prompt {
         public static string ShowDialog(string Caption, string Message, string DefaultValue) {
             var UserInput = new Form() {
