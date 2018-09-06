@@ -52,8 +52,8 @@ namespace MagicToolBox.LunchTray {
                 this.SysUnLock = DateTime.Now;  // Set this to Now to keep the logic simple later
                 // Add Event Handler for when the workstation 
                 SystemEvents.SessionSwitch += this.SystemEvents_SessionSwitch;
-                // Create a partial event to indicate we're beginning a period where the workstation is unlocked (Actively Working/At Workstation/NOT on break)
-                this.ActiveEvent = new SessionEvent() { Start = DateTime.Now, EventTypeID = SessionSwitchReason.SessionUnlock };
+                // Set the current event start to indicate we're beginning a period where the workstation is unlocked (Actively Working/At Workstation/NOT on break)
+                this.ActiveEvent = new SessionEvent() { Start = this.AppStart };
                 // Start Working Timer
                 this.tmrWork.Start();
             }
@@ -61,11 +61,12 @@ namespace MagicToolBox.LunchTray {
 
         #region " Events "
             private void SystemEvents_SessionSwitch(object sender, SessionSwitchEventArgs e) {
-                switch (e.Reason) {
+                switch (e.Reason) {                    
                     case SessionSwitchReason.SessionLock:
                     case SessionSwitchReason.SessionLogoff:
-                        // Start the timer
-                        this.tmrBreak.Start();  // INFO: This behaves like a javascript interval NOT like a stopwatch  TODO: Remove ??
+                        // Work Stops & Break Begins
+                        this.tmrWork.Stop();  // Work Stops
+                        this.tmrBreak.Start(); // Break Begins
 
                         // Update relative DateTime properties
                         this.SysLocked = DateTime.Now;
@@ -73,15 +74,12 @@ namespace MagicToolBox.LunchTray {
                         var tsWork = (this.SysLocked.Value - this.SysUnLock.Value); // Initialized UnLock DateTime Value on construct so it's safe to use this and not worry about logic to figure it out
 
                         // We're ending a period where the workstation was unlocked ( NOT on break )
-                        this.ActiveEvent.EventTypeID = SessionSwitchReason.SessionUnlock;
+                        this.ActiveEvent.EventTypeID = e.Reason;
                         this.ActiveEvent.Ended = DateTime.Now;
-                        this.ActiveEvent.Message = $"Enjoy Break! Time Worked: {tsWork.ToString(@"dd\:hh\:mm\:ss")} SwitchReason: {e.Reason.ToString()}";
+                        this.ActiveEvent.Message = $@"{DateTime.Now:MM/dd/yyyy HH:mm:ss}; Starting Break; Time Worked: {tsWork:dd\:hh\:mm\:ss}; {e.Reason.ToString()}";
 
                         // Save the Event to the database
-                        this.SessionEventLog_Insert(this.ActiveEvent);
-
-                        // Trace the event to the text file
-                        Trace.WriteLine(this.ActiveEvent.Message);
+                        this.SessionEventLog_Insert(this.ActiveEvent);                        
 
                         // TODO: Try showing/activating the form on locking so it will already be on top when you unlock the workstation 
                         this.Visible = true;
@@ -89,47 +87,43 @@ namespace MagicToolBox.LunchTray {
                         this.Activate();
                         Application.DoEvents();
 
-                        // Start the next event
-                        this.ActiveEvent = new SessionEvent() { Start = this.SysLocked.Value, EventTypeID = e.Reason };
-
                         break;
                     case SessionSwitchReason.SessionUnlock:
                     case SessionSwitchReason.SessionLogon:  // TODO: Capturing LogON UNLIKELY as the app will only be able to start AFTER logging on soooo..... (??)
-                        // Stop the timer
-                        this.tmrBreak.Stop();
+                        // Work Starts & Break Ends
+                        this.tmrBreak.Stop();  // Break Over
+                        this.tmrWork.Start();  // Work Begins
 
                         // Update relative DateTime properties
                         this.SysUnLock = DateTime.Now;
                         var tsAway = (this.SysUnLock.Value - this.SysLocked.Value);
 
                         // We're ending a period where the workstation was locked ( WAS ON break )
-                        this.ActiveEvent.EventTypeID = SessionSwitchReason.SessionLock;
+                        this.ActiveEvent.EventTypeID = e.Reason;
                         this.ActiveEvent.Ended = DateTime.Now;
-                        this.ActiveEvent.Message = $"Welcome Back!  Time Away: {tsAway.ToString(@"dd\:hh\:mm\:ss")} - {e.Reason.ToString()}";
+                        this.ActiveEvent.Message = $@"{DateTime.Now:MM/dd/yyyy HH:mm:ss}; Starting Work; Time Away: {tsAway:dd\:hh\:mm\:ss}; {e.Reason.ToString()}";
 
                         // Save the Event to the database
-                        this.SessionEventLog_Insert(this.ActiveEvent);
-                        Trace.WriteLine(this.ActiveEvent.Message);
+                        this.SessionEventLog_Insert(this.ActiveEvent);                        
 
+                        // Setup the TrayIcon to notify the user
+                        this.TrayIcon.Visible = true;
+                        this.TrayIcon.Text = $@"Time Away: {tsAway.ToString(@"dd\:hh\:mm\:ss")}";
+                        this.TrayIcon.BalloonTipText = this.TrayIcon.Text;
+                        this.TrayIcon.ShowBalloonTip(25000, "Welcome Back!!", this.TrayIcon.Text, ToolTipIcon.Info);                        
+
+                        // Show a Message Box
+                        MessageBox.Show($"Welcome Back!\r\n   Time Away: {tsAway.ToString(@"dd\:hh\:mm\:ss")}\r\nSwitchReason: {e.Reason.ToString()}");
+                        
                         // Show the form to welcome the user back
                         this.Visible = true;
                         this.Show();
                         this.Activate();
+                        this.BringToFront();
+                        this.Focus();
 
-                        // Setup the TrayIcon to notify the user
-                        this.TrayIcon.Visible = true;
-                        this.TrayIcon.Text = $"Time Away: {tsAway.ToString(@"dd\:hh\:mm\:ss")}";
-                        this.TrayIcon.BalloonTipText = this.TrayIcon.Text;
-                        this.TrayIcon.ShowBalloonTip(25000, "Welcome Back!!", this.TrayIcon.Text, ToolTipIcon.Info);                        
-
-                        // TODO: See if this will make the TrayIcon.ShowBallonTip work (BECAUSE IT JUST WON'T F*#@@$ SHOW GRRRRR!!!)
+                        // HACK: See if this will make the TrayIcon.ShowBallonTip work (BECAUSE IT JUST WON'T F*#@@$ SHOW GRRRRR!!!)
                         Application.DoEvents();
-
-                        // Show a Message Box
-                        MessageBox.Show($"Welcome Back!\r\n   Time Away: {tsAway.ToString(@"dd\:hh\:mm\:ss")}\r\nSwitchReason: {e.Reason.ToString()}");
-
-                        // Start the next event
-                        this.ActiveEvent = new SessionEvent() { Start = this.SysUnLock.Value, EventTypeID = e.Reason };
 
                         break;
                 }
@@ -141,6 +135,8 @@ namespace MagicToolBox.LunchTray {
                         this.Visible = true;
                         this.Show();
                         this.Activate();
+                        this.BringToFront();
+                        this.Focus();
                         break;
                     case true:
                         this.ShowInTaskbar = false;
@@ -164,10 +160,10 @@ namespace MagicToolBox.LunchTray {
                 }
 
                 // Save file after every Trace.Write
-                Trace.AutoFlush = true;
+                Trace.AutoFlush = true;                
 
-                // Write the first line of the trace to indicate application has started 
-                Trace.WriteLine($"{this.AppStart.ToString("yyyy-MM-dd HH:mm:ss")} App Starting", "SessionLaunch");
+                // Write the first line of the trace to indicate application has started
+                Trace.WriteLine($@"{DateTime.Now:MM/dd/yyyy HH:mm:ss}: Starting App;", "SessionLaunch");
 
                 // Hide the form
                 this.ShowInTaskbar = false;
@@ -177,26 +173,47 @@ namespace MagicToolBox.LunchTray {
             private void App_Main_FormClosing(object sender, FormClosingEventArgs e) {
                 this.ShowInTaskbar = false;
                 this.Visible = false;
-                this.Hide();
-                // Don't Actually Let the application stop running 
-                var r = MessageBox.Show("Would you like to keep the app running in the background?", "", MessageBoxButtons.YesNo);
-                e.Cancel = r == DialogResult.Yes;
+                this.Hide();                
+                switch(MessageBox.Show("Would you like to keep the app running in the background?", "", MessageBoxButtons.YesNo)) {
+                    case DialogResult.Yes:  // Keep the app running
+                        e.Cancel = true;    // Cancel the event
+                        return;
+                    case DialogResult.No:   // App will be closing therefore we want to end the work done and create the audit record
+                        // Work Stops
+                        this.tmrWork.Stop();
+
+                        // Update relative DateTime properties
+                        this.SysLogOff = DateTime.Now;
+                        var tsWork = (this.SysLogOff.Value - this.SysUnLock.Value);
+
+                        // We're ending a period where the workstation was unlocked ( NOT on break )
+                        this.ActiveEvent.EventTypeID = SessionSwitchReason.SessionLogoff;
+                        this.ActiveEvent.Ended = this.SysLogOff.Value;
+                        this.ActiveEvent.Message = $@"{this.SysLogOff.Value:MM/dd/yyyy HH:mm:ss}; Logging Off; Time Worked: {tsWork:dd\:hh\:mm\:ss}; {this.ActiveEvent.EventTypeID}";
+
+                        // Save the Event to the database
+                        this.SessionEventLog_Insert(this.ActiveEvent);                        
+                    break;
+                }
+                // 
             }
             private void tmrWork_Tick(object sender, EventArgs e) {
-                this.tsWorking.Add(TimeSpan.FromMilliseconds(this.tmrWork.Interval));
-                this.TrayIcon.Text = $"Time Worked: { (DateTime.Now - this.SysUnLock.Value).ToString(@"dd\:hh\:mm\:ss")}";
+                // Refresh the working timespan
+                this.tsWorking = (DateTime.Now - this.SysUnLock.Value);
+                this.TrayIcon.Text = $@"Time Worked: {tsWorking:dd\:hh\:mm\:ss}";
             }
             private void tmrBreak_Tick(object sender, EventArgs e) {
-                this.tsOnBreak.Add(TimeSpan.FromMilliseconds(this.tmrBreak.Interval));
+                // Refresh the on break timespan
+                this.tsOnBreak = (DateTime.Now - this.SysLocked.Value);
             }
         #endregion
 
         #region " Methods "
-        private void SessionEventLog_Insert(SessionEvent e) {
-                using (var DB = new SqlConnection(cfg.ConnectionStrings["BreadBoard"].ToString())) {
+            private void SessionEventLog_Insert(SessionEvent e) {
+                using (var DB = new SqlConnection(cfg.ConnectionStrings["App.SQL"].ToString())) {
                     DB.Open();
                     using(var CMD = new SqlCommand("dbo.SessionEventLog_Insert", DB)) {
-                        // Identify that it's a procedure otherwise you'll get a syntax error bitching aboutt not having "Exec " in front which is just, well.. INELEGANT!!
+                        // Identify that it's a procedure otherwise you'll get a syntax error bitching about not having "Exec " in front which is just, well.. INELEGANT!!
                         CMD.CommandType = CommandType.StoredProcedure;                    
                         CMD.Parameters.AddWithValue("@EventTypeID", e.EventTypeID);
                         CMD.Parameters.AddWithValue("@Start", e.Start);
@@ -218,6 +235,10 @@ namespace MagicToolBox.LunchTray {
                     }
                     DB.Close();
                 }
+                // Trace the event to the text file
+                Trace.WriteLine(this.ActiveEvent.Message);
+                // Start the next event
+                this.ActiveEvent = new SessionEvent() { Start = e.Ended };
             }
         #endregion
 
